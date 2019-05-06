@@ -9,7 +9,7 @@ def take_ownership(function, path, excinfo):
     # verify the error is an OSError
     if excinfo == OSError:
     # change permisions of directory
-    print("Modifying permisions for file %s", entry)
+        print("Modifying permisions for file %s", entry)
         for root, dirs, files in os.walk(path):
             print(root, dirs, files)
             for d in dirs:
@@ -36,7 +36,8 @@ if os.path.isdir(test_directory):
 
 else:
     # Doesnt exists: create contents
-    os.mkdir(test_directory, 0o777)
+    os.makedirs(test_directory, 0o777)
+    print("A test output directory has been created at: %s", Definitions.TEST_OUT_DIR)
 
 
 

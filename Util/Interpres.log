@@ -8410,3 +8410,37 @@ max() arg is an empty sequence
  2019-04-24 17:29:24,089  -  test_CodeComments_Filenaming  -  ERROR  -  Could not delete the entire tree.
  2019-04-24 17:29:24,089  -  test_CodeComments_Filenaming  -  INFO  -  Created new test directory at: C:\Users\Ttron\OneDrive\Workspaces\PyCharm_Workspace\Interpres\Tests\Tests_out\Code\File_naming
  2019-04-24 17:31:13,547  -  test_CodeComments_Filenaming  -  INFO  -  Created new test directory at: C:\Users\Ttron\OneDrive\Workspaces\PyCharm_Workspace\Interpres\Tests\Tests_out\Code\File_naming
+ 2019-05-06 15:54:24,411  -  Tests.test_CodeComments_Filenaming  -  INFO  -  Created new test directory at: C:\Users\Ttron\AppData\Local\Temp\Interpres\Tests\Tests_out\Code\File_naming
+ 2019-05-06 15:54:24,430  -  Types.Code  -  DEBUG  -  _extract_text - Adding line[0] to source_text
+ 2019-05-06 15:54:24,431  -  TranslationTools.Translator  -  INFO  -  Translating: Comments
+ 2019-05-06 15:54:24,431  -  TranslationTools.Translator  -  DEBUG  -  __call__ - len(document.source_text): 1
+ 2019-05-06 15:54:24,432  -  TranslationTools.Translator  -  DEBUG  -  __call__ - isinstance(document.source_text[0], Line): True
+ 2019-05-06 15:54:24,432  -  Types.Code  -  DEBUG  -  _contains input-text: Hello world  # say "Hello" to the world., token: '''
+ 2019-05-06 15:54:24,433  -  TranslationTools.Translator  -  DEBUG  -  __call__ - hasattr(document.source_text[0], "text": False
+ 2019-05-06 15:54:24,433  -  TranslationTools.Translator  -  DEBUG  -  __call__ - isinstance(document.source_text[0], str): False
+ 2019-05-06 15:54:24,434  -  Types.Code  -  DEBUG  -  _contains input-text: Hello world  # say "Hello" to the world., token: '''
+ 2019-05-06 15:54:24,435  -  TranslationTools.Translator  -  DEBUG  -  source: [<Types.Code.Line object at 0x03E27A90>]
+ 2019-05-06 15:54:24,435  -  TranslationTools.Translator  -  INFO  -  Performing language detection for the document: 
+ 2019-05-06 15:54:24,436  -  TranslationTools.Translator  -  INFO  -  [Certainty mode]
+ 2019-05-06 15:54:24,436  -  TranslationTools.Translator  -  DEBUG  -  Detecting language for all blocks of text in document.
+ 2019-05-06 15:54:24,436  -  Tests.test_CodeComments_Filenaming  -  ERROR  -  Google has blocked your current IP. We suggest you use a VPN if possible or switch the VPN server you are using.
+*******
+max() arg is an empty sequence
+*******
+ 2019-05-06 15:58:42,269  -  Tests.test_CodeComments_Filenaming  -  INFO  -  Created new test directory at: C:\Users\Ttron\AppData\Local\Temp\Interpres\Tests\Tests_out\Code\File_naming
+ 2019-05-06 15:58:42,271  -  Types.Code  -  DEBUG  -  _extract_text - Adding line[0] to source_text
+ 2019-05-06 15:58:42,272  -  TranslationTools.Translator  -  INFO  -  Translating: Comments
+ 2019-05-06 15:58:42,272  -  TranslationTools.Translator  -  DEBUG  -  __call__ - len(document.source_text): 1
+ 2019-05-06 15:58:42,272  -  TranslationTools.Translator  -  DEBUG  -  __call__ - isinstance(document.source_text[0], Line): True
+ 2019-05-06 15:58:42,272  -  Types.Code  -  DEBUG  -  _contains input-text: Hello world  # say "Hello" to the world., token: '''
+ 2019-05-06 15:58:42,273  -  TranslationTools.Translator  -  DEBUG  -  __call__ - hasattr(document.source_text[0], "text": False
+ 2019-05-06 15:58:42,273  -  TranslationTools.Translator  -  DEBUG  -  __call__ - isinstance(document.source_text[0], str): False
+ 2019-05-06 15:58:42,273  -  Types.Code  -  DEBUG  -  _contains input-text: Hello world  # say "Hello" to the world., token: '''
+ 2019-05-06 15:58:42,274  -  TranslationTools.Translator  -  DEBUG  -  source: [<Types.Code.Line object at 0x03E24AF0>]
+ 2019-05-06 15:58:42,274  -  TranslationTools.Translator  -  INFO  -  Performing language detection for the document: 
+ 2019-05-06 15:58:42,274  -  TranslationTools.Translator  -  INFO  -  [Certainty mode]
+ 2019-05-06 15:58:42,275  -  TranslationTools.Translator  -  DEBUG  -  Detecting language for all blocks of text in document.
+ 2019-05-06 15:58:42,275  -  Tests.test_CodeComments_Filenaming  -  ERROR  -  Tests.test_CodeComments_Filenaming Google has blocked your current IP. We suggest you use a VPN if possible or switch the VPN server you are using.
+*******
+max() arg is an empty sequence
+*******
