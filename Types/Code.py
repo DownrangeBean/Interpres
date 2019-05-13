@@ -4,7 +4,7 @@ import logging
 from Util.Logging import get_logger
 import sys
 from Types.TranslatableDocument import TranslatableDocument
-from TranslationTools.Translator import Translator
+
 
 logger = get_logger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -62,7 +62,8 @@ class Comments (TranslatableDocument):
         i = 0
         previous_line = False
         for l in self.document:
-            logger.debug('_extract_text - Adding line[%d] to source_text', i)
+            logger.debug('_extract_text - Adding line[%d] to source_text: %s', i, l)
+            i += 1
             line = Line(l, token, ltoken, rtoken, plo=previous_line)
             previous_line = line
             self.source_text.append(line)
@@ -86,21 +87,15 @@ class Line:
         self.token = token
         self.l_token = ltoken
         self._openltoken = ''
-        self._open_quotes = False # temp
-        self._double_open = False # temp
-        self._single_open = False # temp
-
+        self._double_open = False
+        self._single_open = False
+        self._plo = None
 
         if isinstance(plo, self.__class__):
-            self._plo_open = plo._open_quotes
             self._openltoken = plo.has_open_comment
-            self._double_open = plo._double_open  # temp
-            self._single_open = plo._single_open  # temp
+            self._plo = plo
         elif isinstance(plo, bool):
-            self._plo_open = plo
             self._openltoken = plo
-            self._double_open = plo  # temp
-            self._single_open = plo  # temp
         else:
             self._openltoken = False
 
@@ -127,29 +122,50 @@ class Line:
             return m.span()[0]
         if self._openltoken:                                # In this state all text from the left is a comment and
             self._double_open = self._single_open = False   # we are only looking for the closing token self.rtoken
-            return re.search(token, string).span()
-        tokens = re.findall(re.escape(token), string)
+            m = re.search(re.escape(token), string)
+            if m:
+                return m.span()
+            return m
+
+        logger.debug('%s - string: %s', self.find_tokens_one.__name__, string)
+        # find all matches of tokens and quotes and add them to the list
+        tokens = re.finditer(re.escape(token), string)
         DOUBLE = '"'
         SINGLE = "'"
-        d = re.findall(DOUBLE, string)
-        s = re.findall(SINGLE, string)
+        d = re.finditer(DOUBLE, string)
+        s = re.finditer(SINGLE, string)
         all = list(tokens)
+        # If we cannot detect any tokens, then no need to continue.
+        if len(all) == 0:
+            return None
+
+        logger.debug('%s - token matches: %s', self.find_tokens_one.__name__, all)
         all.extend(d)
         all.extend(s)
-        if token != "'''":
-            TRIPLE = "'''"
-            t = re.findall(TRIPLE, string)
+        logger.debug('%s - token and quote matches: %s', self.find_tokens_one.__name__, all)
+        # prevent single quotes from being picked up inside triple quotes.
+        TRIPLE = "'''"
+        if token != TRIPLE:
+            t = list(re.finditer(TRIPLE, string))
             all.extend(t)
             new_all = []
             if t:
-                for i in all:
-                    if not t[0] <= i.span()[0] <= t[1]:
-                        new_all.append(i)
-            all = new_all
+                # remove any single quote matches that have overlapping span attributes with triple quotes
+                for i in range(len(t)):
+                    for j in range(len(all)):
+                        if not t[i].span()[0] <= all[j].span()[0] <= t[i].span()[1]:
+                            new_all.append(all[j])
+                all = new_all
+
+        # Sort all matches by span location so we can later walk the string tallying the opening closing of quotes
         all.sort(key=sort_span)
-        double = int(self._double_open)
-        single = int(self._single_open)
-        logger.debug('%s - tokens and quotes: %s', self.find_tokens_one.__name__, all)
+        # initiate the tallys with state of previous line object
+        if self._plo:
+            double = self._plo._double_open
+            single = self._plo._single_open
+        else:
+            double = single = 0
+        logger.debug('%s - sorted matches: %s', self.find_tokens_one.__name__, all)
         ret = ''
         for item in all:
             if ret:
@@ -157,23 +173,25 @@ class Line:
                     logger.debug('%s - Skipping incorrect detection of quote inside of token', self.find_tokens_one.__name__)
                     continue
             logger.debug('%s - item: %s', self.find_tokens_one.__name__, item.group())
-            logger.debug('%s - single mod 2 == 0: %s', self.find_tokens_one.__name__, str(single % 2 == 0))
-            logger.debug('%s - double mod 2 == 0: %s', self.find_tokens_one.__name__, str(double % 2 == 0))
             if item.group() == DOUBLE and single % 2 == 0:
                 double += 1
+                logger.debug('%s - double + 1: %s', self.find_tokens_one.__name__, str(double))
                 continue
             if item.group() == SINGLE and double % 2 == 0:
                 single += 1
+                logger.debug('%s - single + 1: %s', self.find_tokens_one.__name__, str(single))
                 continue
             if item.group() == token:
+                logger.debug('%s - double mod 2 == 0 and single mod 2 == 0 %s', self.find_tokens_one.__name__
+                             , str(double % 2 == 0 and single % 2 == 0))
                 if double % 2 == 0 and single % 2 == 0:
                     logger.debug('%s - returning %s', self.find_tokens_one.__name__, item.span())
                     ret = item.span()
 
-        if double % 2 == 1:
-            self._double_open = True
-        if single % 2 == 1:
-            self._single_open = True
+        logger.debug('%s - single mod 2 == 0: %s', self.find_tokens_one.__name__, str(single % 2 == 0))
+        logger.debug('%s - double mod 2 == 0: %s', self.find_tokens_one.__name__, str(double % 2 == 0))
+        self._double_open = double % 2
+        self._single_open = single % 2
         if ret:
             return ret
         return None
@@ -215,14 +233,16 @@ class Line:
             if l:
                 text = self._l(text, l)
                 logger.debug('_comment after L: %s', text)
+                self._openltoken = True                     # Flag open left token
 
         if self.r_token:
             r = self._contains(self.r_token, text)
             if r:
                 text = self._r(text, r)
                 logger.debug('_comment after R: %s', text)
+                self._openltoken = False                    # Turn of flag for open left token
 
-        if self.token:
+        if self.token and not self._openltoken:
             t = self._contains(self.token, text)
             if t and not (l or r):
                 text = self._l(text, t)
@@ -256,11 +276,13 @@ class Line:
                 logger.debug('code.getter: code: L')
                 if not l[0] == 0:                       # token is at the beginning of the text?
                     ret.append(self._r(text, l))        # add all text left of the symbol
-                text = text[l[1]:]                      # there is no code and so just cut the text for the next search
+                text = text[l[1]:]                      # there is no code to the left and so just cut the text for the
+                self._openltoken = True                 # next search and flag the open left token
 
         if self.r_token:
             r = self._contains(self.r_token, text)
             if r:
+                self._openltoken = False                # Turn off open left token flag
                 logger.debug('code.getter: code: R')
                 logger.debug('code.getter: r[1] >= len(self._line) %s', r[1] >= len(self._line))
                 if len(ret) < 1:
@@ -268,7 +290,7 @@ class Line:
                 if not r[1] >= len(text):
                     ret.append(self._l(text, r))
         logger.debug('code.getter: if self.token: %s', bool(self.token))
-        if self.token:                                  # token was given
+        if self.token and not self._openltoken:         # token was given
             t = self._contains(self.token, text)        # find token in text
             logger.debug('code.getter: text: %s', text)
             logger.debug('code.getter: t and not (l or r): %s', t and not (l or r))
@@ -280,7 +302,7 @@ class Line:
                     ret.append('')
         if ret:
             self._code_text = ret
-            logger.debug('code.getter: comments detected: %s, %s', ret[0], ret[1])
+            logger.debug('code.getter: comments detected: %s', str(ret))
         elif not self._openltoken:
             self._code_text[0] = self._line
             logger.debug('code.getter: no comments detected. Code.code will return entire string: %s', self._code_text)
