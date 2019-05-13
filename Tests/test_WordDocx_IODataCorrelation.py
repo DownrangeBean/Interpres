@@ -3,11 +3,28 @@ from Types.WordDocx import WordDocx
 from TranslationTools.Translator import Translator
 from docx import Document
 from Tests.WarningDecorators import ignore_warnings
+from Util.Logging import get_logger
 import Definitions
 
+logger = get_logger(__name__)
+logger.setLevel(logging.DEBUG)
 
 source_text_for_test = list()
 destination_text_for_test = list()
+
+TEST_OUT_DIR = os.path.join(Definitions.TEST_OUT_DIR, __name__.replace('.', '_'))
+
+
+def setUpModule():
+    if os.path.exists(TEST_OUT_DIR):
+        logger.info('Deleting previous directory.')
+        try:
+            os.rmdir(TEST_OUT_DIR)
+        except OSError:
+            logger.error('Could not delete the entire tree.')
+    else:
+        os.makedirs(TEST_OUT_DIR, 0o777)
+    logger.info('Created new test directory at: %s', TEST_OUT_DIR)
 
 
 class TestTextExtraction(unittest.TestCase):
@@ -18,10 +35,10 @@ class TestTextExtraction(unittest.TestCase):
 
         p2 = f2.paragraphs
         for i in range(len(p1)):
-            if p1[i]._line == p2[i]._line:
+            if p1[i].text == p2[i].text:
                 continue
             else:
-                print(p1[i]._line, p2[i]._line)
+                print(p1[i].text, p2[i].text)
                 return False
         return True
 
@@ -67,7 +84,7 @@ class TestTextExtraction(unittest.TestCase):
     @classmethod
     @ignore_warnings
     def setUpClass(cls):
-        cls.filepath = os.path.join(Definitions.TEST_OUT_DIR, 'Word', 'IODataCorrelation')
+        cls.filepath = TEST_OUT_DIR
         cls.filename = 'TestDoc.docx'
 
         document = Document()

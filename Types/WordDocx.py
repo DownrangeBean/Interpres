@@ -17,7 +17,7 @@ class WordDocx(TranslatableDocument):
 
     def __init__(self, filepath):
         super(WordDocx, self).__init__(filepath)
-        self.new_doc
+        self._new_doc
 
     def _openDoc(self):
         # print(os.path.join(self.dirpath, '.'.join((self.base, self.ext))))
@@ -25,7 +25,7 @@ class WordDocx(TranslatableDocument):
 
     def save(self, name=None):
         i = 0
-        for para in self.new_doc.paragraphs:
+        for para in self._new_doc.paragraphs:
             for run in para.runs:
                 run.text = self.destination_text[i]
                 logger.debug('destination text: "%s"', self.destination_text[i])
@@ -37,12 +37,12 @@ class WordDocx(TranslatableDocument):
             for row in table.rows:
                 for i in range(len(row.cells)):
                     row.cells[i].text = self.destination_text[i]
-        self.new_doc.save(self._checkdir(name))
+        self._new_doc.save(self._checkdir(name))
 
     def _extract_text(self):
-        self.new_doc = Document()  # self.dirpath + self.base + '_' + 'tmp' + self.ext
+        self._new_doc = Document()  # self.dirpath + self.base + '_' + 'tmp' + self.ext
         for para in self.document.paragraphs:
-            new_para = self.new_doc.add_paragraph()
+            new_para = self._new_doc.add_paragraph()
             p = Paragraph(para)
             for run in p.runs:
                 r = new_para.add_run(run.text)
