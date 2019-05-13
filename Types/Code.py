@@ -187,6 +187,7 @@ class Line:
                 if double % 2 == 0 and single % 2 == 0:
                     logger.debug('%s - returning %s', self.find_tokens_one.__name__, item.span())
                     ret = item.span()
+                    break
 
         logger.debug('%s - single mod 2 == 0: %s', self.find_tokens_one.__name__, str(single % 2 == 0))
         logger.debug('%s - double mod 2 == 0: %s', self.find_tokens_one.__name__, str(double % 2 == 0))
@@ -222,6 +223,7 @@ class Line:
                 ret = False
         return ret
 
+    # FIXME: Please optimise this algorithm.
     @property
     def comment(self):
         if self._comment:
@@ -242,7 +244,7 @@ class Line:
                 logger.debug('_comment after R: %s', text)
                 self._openltoken = False                    # Turn of flag for open left token
 
-        if self.token and not self._openltoken:
+        if self.token and (r or not self._openltoken):
             t = self._contains(self.token, text)
             if t and not (l or r):
                 text = self._l(text, t)
@@ -261,13 +263,13 @@ class Line:
     def comment(self):
         del self._comment
 
+    # FIXME: Please optimise this algorithm.
     @property
     def code(self):
         if self._code_text:
             return self._code_text
 
         text = self._line
-        ret = []
         self._code_text = ['', '']
 
         if self.l_token:                                # if left token was given
@@ -275,22 +277,19 @@ class Line:
             if l:                                       # if found
                 logger.debug('code.getter: code: L')
                 if not l[0] == 0:                       # token is at the beginning of the text?
-                    ret.append(self._r(text, l))        # add all text left of the symbol
+                    self._code_text[0] = self._r(text, l)        # add all text left of the symbol
                 text = text[l[1]:]                      # there is no code to the left and so just cut the text for the
-                self._openltoken = True                 # next search and flag the open left token
+                self._openltoken = True                 # next search
 
         if self.r_token:
             r = self._contains(self.r_token, text)
             if r:
-                self._openltoken = False                # Turn off open left token flag
                 logger.debug('code.getter: code: R')
-                logger.debug('code.getter: r[1] >= len(self._line) %s', r[1] >= len(self._line))
-                if len(ret) < 1:
-                    ret.append('')
                 if not r[1] >= len(text):
-                    ret.append(self._l(text, r))
+                    self._code_text[1] = self._l(text, r)
+
         logger.debug('code.getter: if self.token: %s', bool(self.token))
-        if self.token and not self._openltoken:         # token was given
+        if self.token and (r or not self._openltoken):        # token was given
             t = self._contains(self.token, text)        # find token in text
             logger.debug('code.getter: text: %s', text)
             logger.debug('code.getter: t and not (l or r): %s', t and not (l or r))
@@ -298,14 +297,15 @@ class Line:
                 logger.debug('code.getter: T')
                 if not t[0] == 0:                       # token starts at the beginning of the text?
                     logger.debug('code.getter - code_text: %s', self._r(text, t))
-                    ret.append(self._r(text, t))        # add the code text to the return list as first element
-                    ret.append('')
-        if ret:
-            self._code_text = ret
-            logger.debug('code.getter: comments detected: %s', str(ret))
-        elif not self._openltoken:
-            self._code_text[0] = self._line
+                    self._code_text = [self._r(text, t), '']        # add the code text to the return list as first element
+
+        if self._code_text == ['', ''] and not self._openltoken and not t:        # This is True when a line is all code with the
+            self._code_text[0] = self._line                             # and the previous line did not open a left token
             logger.debug('code.getter: no comments detected. Code.code will return entire string: %s', self._code_text)
+        else:
+            logger.debug('code.getter: comments detected: %s', str(self._code_text))
+        if r:
+            self._openltoken = False
         return self._code_text
 
     @code.setter
