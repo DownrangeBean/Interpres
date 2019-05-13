@@ -4,6 +4,7 @@ from Util.Logging import get_logger
 from googletrans import Translator as googleTranslator
 from Types.TranslatableDocument import TranslatableDocument
 from Types import Code
+from Types.Code import Line
 
 
 logger = get_logger(__name__)
@@ -30,14 +31,18 @@ class Translator(object):
             raise AttributeError('No source language has been provided')
 
     def __call__(self, document: TranslatableDocument):
-        logger.info('Translating: {}'.format(type(document).__name__))
-# FIXME: hasattribute does not function for test:
+        logger.info('Translating: %s', type(document).__name__)
+# FIXME: hasattribute does not function as expected for test:
 #       C:\Users\Ttron\OneDrive\Workspaces\PyCharm_Workspace\Interpres\Tests\Tests_out\Code\File_naming\Hello_world_code_T5.py
+        test_type = document.source_text[0]
         logger.debug('__call__ - len(document.source_text): %s', str(len(document.source_text)))
-        logger.debug('__call__ - isinstance(document.source_text[0], Line): %s',
-                     str(isinstance(document.source_text[0], Code.Line)))
-        logger.debug('__call__ - hasattr(document.source_text[0], "text": %s', str(hasattr(document.source_text[0], 'text')))
-        logger.debug('__call__ - isinstance(document.source_text[0], str): %s', str(isinstance(document.source_text[0], str)))
+        logger.debug('__call__ - hasattr(test_type, "text"): %s'
+                     , str(hasattr(test_type, 'text')))
+        logger.debug('__call__ - isinstance(document.source_text[0], Line): %s'
+                     , str(isinstance(document.source_text[0], Line)))
+        logger.debug('__call__ - isinstance(document.source_text[0], str): %s'
+                     , str(isinstance(document.source_text[0], str)))
+
         if isinstance(document.source_text[0], str):
             self._text = list(document.source_text)
         elif hasattr(document.source_text[0], 'text'):
@@ -45,7 +50,7 @@ class Translator(object):
                 logger.debug('%s - adding text from object to self._text: %s', self._detect_source.__name__, obj.text)
                 self._text.append(obj.text)
 
-        logger.debug('source: {}'.format(document.source_text))
+        logger.debug('source: %s', self._text)
         new_text = list()
         source = ''
         logger.info('Performing language detection for the document: ')
@@ -125,23 +130,25 @@ class Translator(object):
             document.newbase += obj.extra
 
     @staticmethod
-    def translate(block, src, dest):
+    def translate(text, src, dest):
+        if not text:
+            return text
         # Capture non-alphanumeric characters as google will strip these and they will need to be replaced
         start = ''
         end = ''
         non_alphanumeric = {' ', '\t', '\n', }
-        if block[0] in non_alphanumeric:
-            start = block[0]
-        if block[-1] in non_alphanumeric:
-            end = block[-1]
+        if text[0] in non_alphanumeric:
+            start = text[0]
+        if text[-1] in non_alphanumeric:
+            end = text[-1]
 
-        BLOCK = googleTranslator().translate(block, src=src, dest=dest).text
+        new_text = googleTranslator().translate(text, src=src, dest=dest).text
 
         if start:
-            BLOCK = start + BLOCK
+            new_text = start + new_text
         if end:
-            BLOCK += end
-        return BLOCK
+            new_text += end
+        return new_text
 
     def _quick_detect(self, text=None):
         if text is None:
@@ -173,6 +180,8 @@ class Translator(object):
     def _detect_source(self, text=None):
         if text is None:
             local_text = self._text
+        if text == '':
+            local_text = self._text
         new_text = []
         for i in local_text:
             if isinstance(i, str):
@@ -182,7 +191,7 @@ class Translator(object):
         local_text = new_text
         detected = {}
         logger.debug('Detecting language for all blocks of text in document.')
-        print(local_text)
+        logger.debug("_detect_source: local_text: %s", local_text)
         for block in local_text:
             logger.debug('%s - block: %s', self._detect_source.__name__, block)
             lang, cert = Translator().detectlang(block)

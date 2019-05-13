@@ -43,7 +43,7 @@ class TestLineClass(unittest.TestCase):
         test_data = {}
         test_data.setdefault('input_strings', [ltoken + " A test to see how well we do", "with comments over two lines" + rtoken
                          , "Hello " + ltoken + " A pleasant greeting" + rtoken, ltoken + "Some random code" + rtoken + " say.helloworld()"])
-        test_data.setdefault('code', [[''], [''], ['Hello '], ['', ' say.helloworld()']])
+        test_data.setdefault('code', [['', ''], ['', ''], ['Hello '], ['', ' say.helloworld()']])
         test_data.setdefault('comment', [' A test to see how well we do', 'with comments over two lines', ' A pleasant greeting'
                    , 'Some random code'])
         test_data.setdefault('output_string', [ltoken + "Test, jak dobře to děláme", " s komentáři na dvou řádcích" + rtoken
@@ -102,12 +102,14 @@ class TestLineClass(unittest.TestCase):
         data = TestLineClass.create_multiline_test_data(ltoken, rtoken)
         previous_line = False
         for i in range(len(data['input_strings'])):
-            previous_line = self.run_Line_tests(Line(data['input_strings'][i], ltoken=ltoken, rtoken=rtoken, plo=previous_line)
-                                                , data['translation_input'][i]  # Input translation
-                                                , data['output_string'][i]  # Output string
-                                                , data['code'][i]  # Extracted code
-                                                , data['comment'][i]  # Extracted comment
-                                                , previous_line)
+            with self.subTest(input_string=data['input_strings'][i]):
+                previous_line = self.run_Line_tests(Line(data['input_strings'][i], ltoken=ltoken, rtoken=rtoken
+                                                         , plo=previous_line)
+                                                    , data['translation_input'][i]  # Input translation
+                                                    , data['output_string'][i]  # Output string
+                                                    , data['code'][i]  # Extracted code
+                                                    , data['comment'][i]  # Extracted comment
+                                                    , previous_line)
 
     def test_cpp_token(self):
         ''' tests the properties of a Line object with cpp token'''
@@ -188,7 +190,7 @@ class TestCodeBreakage(unittest.TestCase):
             lines = ["'string with embedded " + tok + " tokens'"
                      , '"string with embedded ' + ltok + ' tokens"'
                      , '"string with embedded ' + rtok + ' tokens"'
-                     , '"closed double with \' in it" ' + tok + ' "a quoted comment"']
+                     , '"closed double with \' in it and a ' + tok + ' a quoted comment"']
             for i in range(len(lines)):
                 line = Line(lines[i], tok, ltok, rtok)
                 logger.debug('test_reject_tokens: lines[i]: %s', lines[i])
