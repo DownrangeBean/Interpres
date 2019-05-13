@@ -17,7 +17,7 @@ later along with the method. But the fault thrown that implicitly indicates an e
 docx.opc.exceptions.PackageNotFoundError: Package not found at 'EXPECTED-PATH-TO-OUTPUT-FILE'
 '''
 
-TEST_OUT_DIR = os.path.join(Definitions.TEST_OUT_DIR, 'Code', 'File_naming')
+TEST_OUT_DIR = os.path.join(Definitions.TEST_OUT_DIR, __name__.replace('.', '_'))
 
 
 def setUpModule():

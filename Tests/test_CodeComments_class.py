@@ -8,8 +8,7 @@ from Types.Code import Comments
 logger = get_logger(__name__)
 logger.setLevel(logging.DEBUG)
 
-TEST_OUT_DIR = Definitions.TEST_OUT_DIR
-
+TEST_OUT_DIR = os.path.join(Definitions.TEST_OUT_DIR, __name__.replace('.', '_'))
 
 def setUpModule():
     if os.path.exists(TEST_OUT_DIR):
@@ -43,7 +42,7 @@ class TestLineClass(unittest.TestCase):
         test_data = {}
         test_data.setdefault('input_strings', [ltoken + " A test to see how well we do", "with comments over two lines" + rtoken
                          , "Hello " + ltoken + " A pleasant greeting" + rtoken, ltoken + "Some random code" + rtoken + " say.helloworld()"])
-        test_data.setdefault('code', [['', ''], ['', ''], ['Hello '], ['', ' say.helloworld()']])
+        test_data.setdefault('code', [['', ''], ['', ''], ['Hello ', ''], ['', ' say.helloworld()']])
         test_data.setdefault('comment', [' A test to see how well we do', 'with comments over two lines', ' A pleasant greeting'
                    , 'Some random code'])
         test_data.setdefault('output_string', [ltoken + "Test, jak dobře to děláme", " s komentáři na dvou řádcích" + rtoken
@@ -55,45 +54,54 @@ class TestLineClass(unittest.TestCase):
     @staticmethod
     def create_singleline_test_data(token):
         test_data = {}
-        test_data.setdefault('input', 'Hello world ' + token + ' say "Hello" to the world')
-        test_data.setdefault('txin', ' říci "Ahoj" světu')
-        test_data.setdefault('txout', 'Hello world ' + token + ' říci "Ahoj" světu')
-        test_data.setdefault('code', ['Hello world '])
-        test_data.setdefault('com', ' say "Hello" to the world')
+        test_data.setdefault('input', ['Hello world ' + token + ' say "Hello" to the world', token + ' Comment taking up the whole line'])
+        test_data.setdefault('txin', [' říci "Ahoj" světu', ' Komentář zabere celý řádek'])
+        test_data.setdefault('txout', ['Hello world ' + token + ' říci "Ahoj" světu', token + ' Komentář zabere celý řádek'])
+        test_data.setdefault('code', [['Hello world ', ''], ['', '']])
+        test_data.setdefault('com', [' say "Hello" to the world', ' Comment taking up the whole line'])
         return test_data
 
     def test_py_token(self):
         ''' tests the properties of a Line object with python token'''
-        data = TestLineClass.create_singleline_test_data('#')
-        self.run_Line_tests(Line(data['input'], token="#", ltoken="'''")
-                            , data['txin']           # Input translation
-                            , data['txout']          # Output string
-                            , data['code']           # Extracted code
-                            , data['com'])           # Extracted comment
+        token = "#"
+        ltoken = "'''"
+        data = TestLineClass.create_singleline_test_data(token)
+        for i in range(len(data['input'])):
+            with self.subTest(input_string=data['input'][i]):
+                self.run_Line_tests(Line(data['input'][i], token=token, ltoken=ltoken)
+                                    , data['txin'][i]           # Input translation
+                                    , data['txout'][i]          # Output string
+                                    , data['code'][i]           # Extracted code
+                                    , data['com'][i])           # Extracted comment
 
     def test_py_multiline_tokens(self):
         ''' tests the properties of a Line object with python l and r tokens'''
+        ltoken = "'''"
+        rtoken = "'''"
         data = TestLineClass.create_multiline_test_data("'''")
         previous_line = False
         for i in range(len(data['input_strings'])):
-            previous_line = self.run_Line_tests(Line(data['input_strings'][i], ltoken="'''", plo=previous_line)
-            , data['translation_input'][i]                  # Input translation
-            , data['output_string'][i]                      # Output string
-            , data['code'][i]                               # Extracted code
-            , data['comment'][i]                            # Extracted comment
-            , previous_line)
+            with self.subTest(input_string=data['input_strings'][i]):
+                previous_line = self.run_Line_tests(Line(data['input_strings'][i], ltoken=ltoken, rtoken=rtoken
+                                                         , plo=previous_line)
+                                                    , data['translation_input'][i]  # Input translation
+                                                    , data['output_string'][i]  # Output string
+                                                    , data['code'][i]  # Extracted code
+                                                    , data['comment'][i]  # Extracted comment
+                                                    , previous_line)
 
     def test_assembler_token(self):
         ''' tests the properties of a Line object with assembler token'''
         token = ';'
-        ltoken = '/*'
-        rtoken = '*/'
+        ltoken = "/*"
         data = TestLineClass.create_singleline_test_data(token)
-        self.run_Line_tests(Line(data['input'], token=token, ltoken=ltoken, rtoken=rtoken)
-                            , data['txin']  # Input translation
-                            , data['txout']  # Output string
-                            , data['code']  # Extracted code
-                            , data['com'])  # Extracted comment
+        for i in range(len(data['input'])):
+            with self.subTest(input_string=data['input'][i]):
+                self.run_Line_tests(Line(data['input'][i], token=token, ltoken=ltoken)
+                                    , data['txin'][i]           # Input translation
+                                    , data['txout'][i]          # Output string
+                                    , data['code'][i]           # Extracted code
+                                    , data['com'][i])           # Extracted comment
 
     def test_assembler_multiline_tokens(self):
         ''' tests the properties of a Line object with assembler l and r tokens'''
@@ -114,14 +122,15 @@ class TestLineClass(unittest.TestCase):
     def test_cpp_token(self):
         ''' tests the properties of a Line object with cpp token'''
         token = '//'
-        ltoken = '/*'
-        rtoken = '*/'
+        ltoken = "/*"
         data = TestLineClass.create_singleline_test_data(token)
-        self.run_Line_tests(Line(data['input'], token=token, ltoken=ltoken, rtoken=rtoken)
-                            , data['txin']  # Input translation
-                            , data['txout']  # Output string
-                            , data['code']  # Extracted code
-                            , data['com'])  # Extracted comment
+        for i in range(len(data['input'])):
+            with self.subTest(input_string=data['input'][i]):
+                self.run_Line_tests(Line(data['input'][i], token=token, ltoken=ltoken)
+                                    , data['txin'][i]           # Input translation
+                                    , data['txout'][i]          # Output string
+                                    , data['code'][i]           # Extracted code
+                                    , data['com'][i])           # Extracted comment
 
     def test_cpp_multiline_tokens(self):
         ''' tests the properties of a Line object with cpp l and r tokens'''
@@ -130,12 +139,14 @@ class TestLineClass(unittest.TestCase):
         data = TestLineClass.create_multiline_test_data(ltoken, rtoken)
         previous_line = False
         for i in range(len(data['input_strings'])):
-            previous_line = self.run_Line_tests(Line(data['input_strings'][i], ltoken=ltoken, rtoken=rtoken, plo=previous_line)
-                                                , data['translation_input'][i]  # Input translation
-                                                , data['output_string'][i]  # Output string
-                                                , data['code'][i]  # Extracted code
-                                                , data['comment'][i]  # Extracted comment
-                                                , previous_line)
+            with self.subTest(input_string=data['input_strings'][i]):
+                previous_line = self.run_Line_tests(Line(data['input_strings'][i], ltoken=ltoken, rtoken=rtoken
+                                                         , plo=previous_line)
+                                                    , data['translation_input'][i]  # Input translation
+                                                    , data['output_string'][i]  # Output string
+                                                    , data['code'][i]  # Extracted code
+                                                    , data['comment'][i]  # Extracted comment
+                                                    , previous_line)
 
 
 @patch('Types.Code.Line')
