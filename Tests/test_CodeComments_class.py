@@ -1,14 +1,17 @@
-import unittest, logging, os, sys, Definitions
+import unittest, logging, os, sys
 from unittest.mock import patch, Mock
 from Util.Logging import get_logger
 from Types.Code import Line
 from Types.Code import Comments
+import Interpres_Globals
 
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 logger = get_logger(__name__)
 logger.setLevel(logging.DEBUG)
 
-TEST_OUT_DIR = os.path.join(Definitions.TEST_OUT_DIR, __name__.replace('.', '_'))
+TEST_OUT_DIR = os.path.join(Interpres_Globals.TEST_OUT_DIR, __name__.replace('.', '_'))
 
 def setUpModule():
     if os.path.exists(TEST_OUT_DIR):

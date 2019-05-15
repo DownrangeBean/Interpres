@@ -1,5 +1,9 @@
 import unittest
+import Interpres_Globals
+from Util.Logging import get_logger
 
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 class TestTranslator(unittest.TestCase):
     def test_anti_stripping(self):

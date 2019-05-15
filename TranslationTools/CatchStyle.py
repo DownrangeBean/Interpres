@@ -1,13 +1,8 @@
-import logging
+from Util.Logging import get_logger
+import Interpres_Globals
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.DEBUG)
-handler = logging.StreamHandler()
-#formatter = logging.Formatter(' %(asctime)s  -  %(name)s  -  %(levelname)s  -  %(message)s')
-formatter = logging.Formatter(' %(name)s  -  %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 
 class Paragraph(object):

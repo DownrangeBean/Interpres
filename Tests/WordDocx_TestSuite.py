@@ -1,13 +1,15 @@
 import unittest, os, sys, logging
 from Tests.test_WordDocx_IODataCorrelation import TestTextExtraction
 from Tests.test_WordDocx_Filenaming import TestNaming
-import Definitions
+import Interpres_Globals
+from Util.Logging import get_logger
 
-#logging.basicConfig(level=logging.ERROR, format=' %(asctime)s -  %(levelname)s  -  %(message)s')
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 
 def suite():
-    test_directory = os.path.join(Definitions.ROOT_DIR, 'Testout', 'Word')
+    test_directory = os.path.join(Interpres_Globals.ROOT_DIR, 'Testout', 'Word')
     if not os.path.isdir(test_directory):
         os.mkdir(test_directory, 0o777)
     else:

@@ -1,14 +1,12 @@
-import nltk, os, sys, abc
+import nltk
+import os, abc
 import logging
 from TranslationTools.Decorators import fragile
+from Util.Logging import get_logger
+import Interpres_Globals
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter(' %(asctime)s  -  %(name)s  -  %(levelname)s  -  %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 
 class TranslatableDocument:
@@ -33,9 +31,9 @@ class TranslatableDocument:
         logging.info('Searching document filename for keywords.')
         s = self.base.replace('_', ' ').replace('-', ' ')
         tokens = set(nltk.word_tokenize(s))
-        if kw is str:
+        if isinstance(kw, str):
             return kw in tokens
-        elif kw is list:
+        elif isinstance(kw, list):
             for k in kw:
                 if k in tokens:
                     return True

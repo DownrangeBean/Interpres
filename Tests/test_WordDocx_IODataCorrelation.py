@@ -4,15 +4,15 @@ from TranslationTools.Translator import Translator
 from docx import Document
 from Tests.WarningDecorators import ignore_warnings
 from Util.Logging import get_logger
-import Definitions
+import Interpres_Globals
 
 logger = get_logger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 source_text_for_test = list()
 destination_text_for_test = list()
 
-TEST_OUT_DIR = os.path.join(Definitions.TEST_OUT_DIR, __name__.replace('.', '_'))
+TEST_OUT_DIR = os.path.join(Interpres_Globals.TEST_OUT_DIR, __name__.replace('.', '_'))
 
 
 def setUpModule():

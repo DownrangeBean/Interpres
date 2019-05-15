@@ -1,14 +1,12 @@
 import re, nltk, logging
-import Definitions
-from Util.Logging import get_logger
 from googletrans import Translator as googleTranslator
 from Types.TranslatableDocument import TranslatableDocument
-from Types import Code
 from Types.Code import Line
-
+from Util.Logging import get_logger
+import Interpres_Globals
 
 logger = get_logger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 
 class Translator(object):
@@ -32,8 +30,10 @@ class Translator(object):
 
     def __call__(self, document: TranslatableDocument):
         logger.info('Translating: %s', type(document).__name__)
-# FIXME: hasattribute does not function as expected for test:
-#       C:\Users\Ttron\OneDrive\Workspaces\PyCharm_Workspace\Interpres\Tests\Tests_out\Code\File_naming\Hello_world_code_T5.py
+        if not len(document.source_text) > 0:
+            logger.info("Nothing to translate.")
+            return
+
         test_type = document.source_text[0]
         logger.debug('__call__ - len(document.source_text): %s', str(len(document.source_text)))
         logger.debug('__call__ - hasattr(test_type, "text"): %s'

@@ -4,7 +4,11 @@ from Types.WordDocx import WordDocx
 from TranslationTools.Translator import Translator
 from Tests.WarningDecorators import ignore_warnings
 from Util.Logging import get_logger
-import Definitions
+import Interpres_Globals
+
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
+TEST_OUT_DIR = os.path.join(Interpres_Globals.TEST_OUT_DIR, __name__.replace('.', '_'))
 
 '''
 Note. This test implicitly tests the function of the deprecated method 'setname' for docx instance. This may be removed
@@ -12,11 +16,6 @@ later along with the method. But the fault thrown that implicitly indicates an e
     
 docx.opc.exceptions.PackageNotFoundError: Package not found at 'EXPECTED-PATH-TO-OUTPUT-FILE'
 '''
-
-logger = get_logger(__name__)
-logger.setLevel(logging.DEBUG)
-
-TEST_OUT_DIR = os.path.join(Definitions.TEST_OUT_DIR, __name__.replace('.', '_'))
 
 
 def setUpModule():

@@ -1,9 +1,11 @@
 import unittest, os, sys, logging
 from Tests.test_CodeComments_class import TestLineClass
-from Tests.test_CodeComments_class import TestCodeClass
-from Tests.test_CodeComments_class import TestCodeBreakage
 from Tests.test_CodeComments_Filenaming import TestNaming
+from Util.Logging import get_logger
+import Interpres_Globals
 
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 def suite():
 

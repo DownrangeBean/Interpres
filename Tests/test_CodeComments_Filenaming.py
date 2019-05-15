@@ -3,11 +3,10 @@ from Util.Logging import get_logger
 from Types.Code import Comments
 from TranslationTools.Translator import Translator
 from Tests.WarningDecorators import ignore_warnings
-import Definitions
-
+import Interpres_Globals
 
 logger = get_logger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 
 '''
@@ -17,7 +16,7 @@ later along with the method. But the fault thrown that implicitly indicates an e
 docx.opc.exceptions.PackageNotFoundError: Package not found at 'EXPECTED-PATH-TO-OUTPUT-FILE'
 '''
 
-TEST_OUT_DIR = os.path.join(Definitions.TEST_OUT_DIR, __name__.replace('.', '_'))
+TEST_OUT_DIR = os.path.join(Interpres_Globals.TEST_OUT_DIR, __name__.replace('.', '_'))
 
 
 def setUpModule():

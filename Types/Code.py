@@ -4,10 +4,10 @@ import logging
 from Util.Logging import get_logger
 import sys
 from Types.TranslatableDocument import TranslatableDocument
-
+import Interpres_Globals
 
 logger = get_logger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 
 class Comments (TranslatableDocument):
@@ -17,7 +17,8 @@ class Comments (TranslatableDocument):
         self.token = None
 
     def _openDoc(self):
-        self.document = open(os.path.join(self.dirpath, '.'.join((self.base, self.ext))), 'r+')
+        logger.debug('path: "%s"', os.path.normpath(os.path.join(self.dirpath, self.base + os.path.extsep + self.ext)))
+        self.document = open(os.path.normpath(os.path.join(self.dirpath, self.base + os.path.extsep + self.ext)), 'r+')
 
     def save(self, name=None):
         self.document.close()

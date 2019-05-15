@@ -1,6 +1,6 @@
-import logging, os, sys, Definitions
+import logging, os, sys, Interpres_Globals
 
-LOG_FILE = os.path.join(Definitions.ROOT_DIR, 'Util', 'Interpres.log')
+LOG_FILE = os.path.join(Interpres_Globals.ROOT_DIR, 'Util', 'Interpres.log')
 
 
 def get_logger(name):

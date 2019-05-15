@@ -1,13 +1,11 @@
-import os, logging
+import os
 from Types.WordDocx import WordDocx
 from Types.Code import Comments
+from Util.Logging import get_logger
+import Interpres_Globals
 
-logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.ERROR)
-handler = logging.StreamHandler()
-formatter = logging.Formatter(' %(asctime)s  -  %(name)s  -  %(levelname)s  -  %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 
 class DocumentFactory(object):
@@ -18,14 +16,17 @@ class DocumentFactory(object):
         dirpath, basename = os.path.split(filepath)
         base, ext = basename.split('.')
 
-        logger.debug('ext: {}'.format(ext))
+        logger.debug('ext: %s', ext)
 
         switcher = {'docx': WordDocx,
-                    'doc': WordDocx,
+                    #'doc': WordDocx, - it seems that python -docx does not support opening these older files types
                     'py': Comments,
                     'c': Comments,
                     'h': Comments,
                     'cpp': Comments,
                     'asm': Comments}
-        logger.debug('%s', switcher[ext])
-        return switcher[ext]
+        if ext in switcher.keys():
+            logger.debug('%s', switcher[ext])
+            return switcher[ext]
+        else:
+            raise ValueError

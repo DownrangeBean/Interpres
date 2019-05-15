@@ -1,4 +1,4 @@
-import Definitions
+import Interpres_Globals
 import unittest
 import os
 import sys
@@ -18,7 +18,7 @@ def take_ownership(function, path, excinfo):
                 os.chmod(os.path.join(root, f), 0o777)
         function(path)
 
-test_directory = Definitions.TEST_OUT_DIR
+test_directory = Interpres_Globals.TEST_OUT_DIR
 # check if directory exists
 if os.path.isdir(test_directory):
     # if exists: delete contents tree
@@ -37,12 +37,12 @@ if os.path.isdir(test_directory):
 else:
     # Doesnt exists: create contents
     os.makedirs(test_directory, 0o777)
-    print("A test output directory has been created at: %s", Definitions.TEST_OUT_DIR)
+    print("A test output directory has been created at: %s", Interpres_Globals.TEST_OUT_DIR)
 
 
 
 loader = unittest.defaultTestLoader
-suite = loader.discover(Definitions.ROOT_DIR)
+suite = loader.discover(Interpres_Globals.ROOT_DIR)
 print(suite.__dict__)
 runner = unittest.TextTestRunner(failfast=True)
 runner.run(suite)

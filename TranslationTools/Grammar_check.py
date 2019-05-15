@@ -1,4 +1,9 @@
 import language_check, sys, os
+from Util.Logging import get_logger
+import Interpres_Globals
+
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 
 def autocorrect(text):

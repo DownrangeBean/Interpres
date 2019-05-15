@@ -1,10 +1,14 @@
 from odf.opendocument import load
 from odf.text import Span
 from odf import teletype
-from odf.style import Style, TextProperties
 from googletrans import Translator
 import odf_util
 import re, language_check
+from Util.Logging import get_logger
+import Interpres_Globals
+
+logger = get_logger(__name__)
+logger.setLevel(Interpres_Globals.VERBOSITY)
 
 def translate_flow_diagram(filename, destination='en'):
 
