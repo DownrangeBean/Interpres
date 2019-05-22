@@ -107,8 +107,6 @@ if args.directories or args.keywords:
         for d in directories:
             logger.info("currently searching in directory %s", d)
             for root, dirs, file_names in os.walk(d):
-                if args.output and os.path.basename(root) in list(args.output):
-                    continue
                 for name in file_names:
                     file = os.path.join(root, name)
                     files.append(file)
@@ -149,9 +147,9 @@ if args.directories or args.keywords:
 
                 logger.info('Document will be saved to: %s', os.path.join(doc.dirpath, doc.newbase))
         except ValueError:
-            logging.error('Cannot support format.')
-
-            ### To here has been indented twice
+            logger.warning('Cannot support format. %s', os.path.split(os.path.basename(path))[1])
+        except AssertionError:
+            logger.warning('This file is empty: %s', path)
     print("Data types passed: ", str(extension_counter))
     # Done?
 

@@ -18,6 +18,7 @@ class WordDocx(TranslatableDocument):
     def _openDoc(self):
         # print(os.path.join(self.dirpath, '.'.join((self.base, self.ext))))
         self.document = Document(os.path.join(self.dirpath, '.'.join((self.base, self.ext))))
+        assert(len(self.document.paragraphs) != 0)
 
     def save(self, name=None):
         if len(self.destination_text) > 0:

@@ -12,6 +12,7 @@ logger.setLevel(Interpres_Globals.VERBOSITY)
 class TranslatableDocument:
 
     def __init__(self, filepath):
+        logger.info(str(filepath))
         self.dirpath, basename = os.path.split(filepath)
         self.base, self.ext = basename.split('.')
         self.newbase = self.base + '_'

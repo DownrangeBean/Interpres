@@ -29,7 +29,7 @@ class Translator(object):
             raise AttributeError('No source language has been provided')
 
     def __call__(self, document: TranslatableDocument):
-        logger.info('Translating: %s', type(document).__name__)
+        logger.info('Translating: %s, %s', type(document).__name__, document.dirpath)
         if not len(document.source_text) > 0:
             logger.info("Nothing to translate.")
             return

@@ -19,6 +19,8 @@ class Comments (TranslatableDocument):
     def _openDoc(self):
         logger.debug('path: "%s"', os.path.normpath(os.path.join(self.dirpath, self.base + os.path.extsep + self.ext)))
         self.document = open(os.path.normpath(os.path.join(self.dirpath, self.base + os.path.extsep + self.ext)), 'r+')
+        assert(len(self.document.readlines()) != 0)
+        # TODO: write a test for empty files
 
     def save(self, name=None):
         self.document.close()
