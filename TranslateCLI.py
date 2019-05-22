@@ -3,8 +3,48 @@ import argparse, sys, os, logging
 from Util.Logging import get_logger
 import Interpres_Globals
 
+
 logger = get_logger(__name__)
 
+
+def handle_google(func, docu):
+    try:
+        func(docu)
+    except ValueError as e:
+        logger.info(e, 'Google may have blocked your current IP.')
+        print('If possible please use/change your VPN and then continue.')
+        while 1:
+            choice = input('[C]ontinue, or [E]xit')
+            if choice == 'C' or choice == 'E':
+                if choice == 'C':
+                    handle_google(func, docu)
+                else:
+                    sys.exit()
+
+
+def prepare_output(out_dir, current_dir):
+    if out_dir:
+        out_dir = out_dir.replace("'", '').replace('"', '')
+        if os.path.isdir(out_dir):
+            output_ = out_dir
+        elif os.path.exists(os.path.join(current_dir, out_dir)):
+            output_ = os.path.join(current_dir, out_dir)
+        elif os.path.splitdrive(out_dir)[0] == '':
+            output_ = os.path.join(current_dir, out_dir)
+            try:
+                os.mkdir(output_, 0o777)
+            except PermissionError:
+                logger.error('Do not have permission to create output directory here. %s', output_)
+                sys.exit()
+        else:
+            logger.error('Not a valid path.')
+            sys.exit()
+        logger.info('Created output directory %s', output_)
+        return output_
+
+########################################################################################################################
+#  Argument parser
+########################################################################################################################
 
 parser = argparse.ArgumentParser(prog='TranslationTools',
                                  description='''TranslationTools documents in place; or phrases on the CLI. 
@@ -40,22 +80,20 @@ args = parser.parse_args()
 
 verbosity_table = [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
 Interpres_Globals.VERBOSITY = verbosity_table[args.verbose + 1]     # Plus 1 as we do not have CRITICAL logs yet
-print('verbosity: ', Interpres_Globals.VERBOSITY)                   # need to make more tests
-print(args)
+logger.debug('verbosity: ', Interpres_Globals.VERBOSITY)                   # need to make more tests
+logger.debug(args)
 
 from Types.DocumentFactory import DocumentFactory
 from TranslationTools.Translator import Translator
 from TranslationTools.Decorators import fragile
-
-#logger.setLevel(Interpres_Globals.VERBOSITY)
 
 if args.directories or args.keywords:
     if args.directories:
         # Separate files-paths from directory-paths and check validity
         validPaths = [p for p in args.directories if os.path.exists(p)]
         if len(validPaths) != len(args.directories):
-            print("ValueError: one or more paths given does not exist:\n",
-                  [item for item in args.directories if item not in validPaths])
+            logger.error("\n\nValueError: one or more paths given with '-d' argument does not exist: %s\n",
+                         str([item for item in args.directories if item not in validPaths]))
             sys.exit()
         directories = [d for d in validPaths if os.path.isdir(d)]
         files = [f for f in validPaths if f not in directories]
@@ -64,18 +102,20 @@ if args.directories or args.keywords:
         directories = [os.getcwd(), ]
 
     # unpack all paths
-    print('directories: %s', directories)
+    logger.debug('directories: %s', directories)
     if directories is not None:
-        #files.extend([(d, file.split('.')) for d in directories for file in os.listdir(d)])
         for d in directories:
+            logger.info("currently searching in directory %s", d)
             for root, dirs, file_names in os.walk(d):
+                if args.output and os.path.basename(root) in list(args.output):
+                    continue
                 for name in file_names:
                     file = os.path.join(root, name)
                     files.append(file)
                     logger.debug(file)
 
     logger.info('unpacking paths..')
-    if Interpres_Globals.VERBOSITY < 20:            # Debug or less
+    if Interpres_Globals.VERBOSITY < 20:  # Debug or less
         for f in files:
             logger.debug(f)
 
@@ -83,38 +123,36 @@ if args.directories or args.keywords:
     files = list(set(files))
     logger.info('removing duplicates..')
 
-    if args.output:
-        if os.path.exists(args.output):
-            if not os.path.isdir(args.output):
-                logger.error('Output directory must be a valid directory{} '.format(args.output))
-                sys.exit()
-        else:
-            logger.info('Creating output directory.')
-            try:
-                os.mkdir(args.output, 0o777)
-            except PermissionError:
-                logger.error('Do not have permission to create output directory here. {}'.format(args.output))
-
     # create translator instance
-    translator = Translator(source=args.source, destination=args.target, dyn=args.dyn, mix=args.mix, extra=args.extra,
+    logger.info("Creating translator.")
+    translator = Translator(source=args.source, destination=args.target, dyn=args.dyn, mix=args.mix,
+                            extra=args.extra,
                             abbreviation=args.abbreviation, translate=args.translate)
-    logger.debug('src={}, dest={}, dyn={}, mix={}'.format(args.source, args.target, args.dyn, args.mix))
+    logger.debug('src=%s, dest=%s, dyn=%s, mix=%s', args.source, args.target, args.dyn, args.mix)
 
+    extension_counter = {}
     # create concrete objects
     for path in files:
         try:
             with fragile(DocumentFactory.make_dao(path)(path)) as doc:
+                extension_counter[doc.ext] = extension_counter.setdefault(doc.ext, 0) + 1
                 if args.keywords:
                     for key in args.keywords:
                         if key not in doc:
                             fragile.Break
                 if args.output:
-                    doc.dirpath = args.output
-                logger.debug('extra={}, abbreviation={}, translate={}'.format(args.extra, args.abbreviation, args.translate))
-                translator(doc)
-                logger.info('Document will be saved to: {}'.format(os.path.join(doc.dirpath, doc.newbase)))
+                    doc.dirpath = prepare_output(args.output, os.path.dirname(path))
+                logger.debug('extra=%s, abbreviation=%s, translate=%s', args.extra, args.abbreviation,
+                             args.translate)
+
+                handle_google(translator, doc)  # Handle google blocking by waiting for user to change vpn
+
+                logger.info('Document will be saved to: %s', os.path.join(doc.dirpath, doc.newbase))
         except ValueError:
-            logging.debug('Cannot support format.')
+            logging.error('Cannot support format.')
+
+            ### To here has been indented twice
+    print("Data types passed: ", str(extension_counter))
     # Done?
 
 ############################################

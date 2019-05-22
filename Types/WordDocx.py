@@ -20,20 +20,23 @@ class WordDocx(TranslatableDocument):
         self.document = Document(os.path.join(self.dirpath, '.'.join((self.base, self.ext))))
 
     def save(self, name=None):
-        i = 0
-        for para in self._new_doc.paragraphs:
-            for run in para.runs:
-                run.text = self.destination_text[i]
-                logger.debug('destination text: "%s"', self.destination_text[i])
-                logger.debug('same text but in run: "%s"', run.text)
-                i += 1
-            logger.debug('text in paragraph: %s', para.text)
+        if len(self.destination_text) > 0:
+            i = 0
+            for para in self._new_doc.paragraphs:
+                for run in para.runs:
+                    run.text = self.destination_text[i]
+                    logger.debug('destination text: "%s"', self.destination_text[i])
+                    logger.debug('same text but in run: "%s"', run.text)
+                    i += 1
+                logger.debug('text in paragraph: %s', para.text)
 
-        for table in self.document.tables:
-            for row in table.rows:
-                for i in range(len(row.cells)):
-                    row.cells[i].text = self.destination_text[i]
-        self._new_doc.save(self._checkdir(name))
+            for table in self.document.tables:
+                for row in table.rows:
+                    for i in range(len(row.cells)):
+                        row.cells[i].text = self.destination_text[i]
+            self._new_doc.save(self._checkdir(name))
+        else:
+            logger.error("Unable to save as no data has been parsed yet.")
 
     def _extract_text(self):
         self._new_doc = Document()  # self.dirpath + self.base + '_' + 'tmp' + self.ext

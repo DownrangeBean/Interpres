@@ -78,7 +78,7 @@ class Translator(object):
                         source = previous_source
                 new_text.append((Translator.translate(self._text[i], src=source, dest=self.destination)
                                  + (self.mix and '\n' + self._text[i] or '')))
-                logger.debug('source: {}, destination: {}'.format(self._text[i], document.source_text[i]))
+                logger.debug('source: %s, destination: %s', self._text[i], document.source_text[i])
                 previous_source = source
 
         # Source is given the language with highest certainty for the document.
@@ -121,10 +121,10 @@ class Translator(object):
             for t in tokens:
                 document.newbase += googleTranslator().translate(t, src=self.source, dest=self.destination).text + '_'
         if obj.abbreviation:
-            logging.info('Adding destination language abbreviation: {} to end of file.'.format(self.destination))
+            logging.info('Adding destination language abbreviation: %s to end of file.', self.destination)
             document.newbase += obj.destination # for adding abbreviation to filename
         if obj.extra:
-            logging.info('Adding callers provided text ({}) to end of filename.'.format(obj.extra))
+            logging.info('Adding callers provided text (%s) to end of filename.', obj.extra)
             if obj.abbreviation:
                 obj.extra = '_' + obj.extra
             document.newbase += obj.extra
@@ -160,7 +160,7 @@ class Translator(object):
                 try:
                     return Translator().detectlang(block)[0]
                 except TypeError as e:
-                    logger.error('Block: {}, type: {}, len: {}'.format(block, type(block), len(block)))
+                    logger.error('Block: %s, type: %s, len: %s', block, str(type(block)), str(len(block)))
                     raise e
         raise (ValueError('Could not determine language from source text.'))
 
@@ -174,7 +174,7 @@ class Translator(object):
         lang = d.lang
         if len(lang) > 2:
             lang = lang[:2]
-        logger.debug('Language: {}, certainty: {}'.format(lang, d.confidence))
+        logger.debug('Language: %s, certainty: %s', lang, d.confidence)
         return lang, d.confidence
 
     def _detect_source(self, text=None):

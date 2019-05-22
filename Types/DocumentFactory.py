@@ -29,4 +29,5 @@ class DocumentFactory(object):
             logger.debug('%s', switcher[ext])
             return switcher[ext]
         else:
+            logger.error("Cannot support this file extension.")
             raise ValueError
