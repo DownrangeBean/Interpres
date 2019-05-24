@@ -6,42 +6,6 @@ import Interpres_Globals
 
 logger = get_logger(__name__)
 
-
-def handle_google(func, docu):
-    try:
-        func(docu)
-    except ValueError as e:
-        logger.info(e, 'Google may have blocked your current IP.')
-        print('If possible please use/change your VPN and then continue.')
-        while 1:
-            choice = input('[C]ontinue, or [E]xit')
-            if choice == 'C' or choice == 'E':
-                if choice == 'C':
-                    handle_google(func, docu)
-                else:
-                    sys.exit()
-
-
-def prepare_output(out_dir, current_dir):
-    if out_dir:
-        out_dir = out_dir.replace("'", '').replace('"', '')
-        if os.path.isdir(out_dir):
-            output_ = out_dir
-        elif os.path.exists(os.path.join(current_dir, out_dir)):
-            output_ = os.path.join(current_dir, out_dir)
-        elif os.path.splitdrive(out_dir)[0] == '':
-            output_ = os.path.join(current_dir, out_dir)
-            try:
-                os.mkdir(output_, 0o777)
-            except PermissionError:
-                logger.error('Do not have permission to create output directory here. %s', output_)
-                sys.exit()
-        else:
-            logger.error('Not a valid path.')
-            sys.exit()
-        logger.info('Created output directory %s', output_)
-        return output_
-
 ########################################################################################################################
 #  Argument parser
 ########################################################################################################################
@@ -74,18 +38,67 @@ parser.add_argument('-o', dest='output', help='Output directory. Default: same d
 
 args = parser.parse_args()
 
-############################################
-#   Document translation                   #
-############################################
+########################################################################################################################
+#   Setup logging                                                                                                      #
+########################################################################################################################
+
+with open(Interpres_Globals.LOG_FILE, 'w') as f:
+    pass                                            # Truncate log file
 
 verbosity_table = [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
 Interpres_Globals.VERBOSITY = verbosity_table[args.verbose + 1]     # Plus 1 as we do not have CRITICAL logs yet
-logger.debug('verbosity: ', Interpres_Globals.VERBOSITY)                   # need to make more tests
+logger.setLevel(Interpres_Globals.VERBOSITY)                        # need to make more tests
+logger.debug('verbosity: %s', Interpres_Globals.VERBOSITY)
 logger.debug(args)
 
 from Types.DocumentFactory import DocumentFactory
 from TranslationTools.Translator import Translator
 from TranslationTools.Decorators import fragile
+
+############################################
+#   Document translation                   #
+############################################
+
+def handle_google(func, docu):
+    try:
+        func(docu)
+    except ValueError as e:
+        logger.info(e, 'Google may have blocked your current IP.')
+        print('If possible please use/change your VPN and then continue.')
+        while 1:
+            choice = input('[C]ontinue, or [E]xit')
+            if choice == 'C' or choice == 'E':
+                if choice == 'C':
+                    handle_google(func, docu)
+                else:
+                    sys.exit()
+
+
+def prepare_output(out_dir, current_dir):
+    output_ = ''
+    if out_dir:
+        out_dir = out_dir.replace("'", '').replace('"', '')
+        if os.path.isdir(out_dir):
+            output_ = out_dir
+        elif os.path.exists(os.path.join(current_dir, out_dir)):
+            output_ = os.path.join(current_dir, out_dir)
+        elif os.path.splitdrive(out_dir)[0] == '':
+            output_ = os.path.join(current_dir, out_dir)
+        elif os.path.splitdrive(out_dir)[0].lower().isalpha():
+            output_ = out_dir
+        else:
+            logger.error('Not a valid path.')
+            sys.exit()
+        if not os.path.exists(output_):
+            try:
+                os.mkdir(output_, 0o777)
+                logger.info('Created output directory %s', output_)
+            except PermissionError:
+                logger.error('Do not have permission to create output directory here. %s', output_)
+                sys.exit()
+        logger.info('Using output directory %s', output_)
+    return output_
+
 
 if args.directories or args.keywords:
     if args.directories:
@@ -107,6 +120,8 @@ if args.directories or args.keywords:
         for d in directories:
             logger.info("currently searching in directory %s", d)
             for root, dirs, file_names in os.walk(d):
+                if args.output and root == prepare_output(args.output, os.path.dirname(root)):
+                    continue
                 for name in file_names:
                     file = os.path.join(root, name)
                     files.append(file)
@@ -133,24 +148,38 @@ if args.directories or args.keywords:
     for path in files:
         try:
             with fragile(DocumentFactory.make_dao(path)(path)) as doc:
-                extension_counter[doc.ext] = extension_counter.setdefault(doc.ext, 0) + 1
                 if args.keywords:
-                    for key in args.keywords:
-                        if key not in doc:
-                            fragile.Break
+                    if not [True for key in args.keywords if key in doc]:
+                        doc.close()             # safely close document handle
+                        fragile.Break
                 if args.output:
                     doc.dirpath = prepare_output(args.output, os.path.dirname(path))
                 logger.debug('extra=%s, abbreviation=%s, translate=%s', args.extra, args.abbreviation,
                              args.translate)
 
-                handle_google(translator, doc)  # Handle google blocking by waiting for user to change vpn
+                # Test if document already exists so we can skip it.
+                old_name = doc.newbase
+                translator._translate_name(doc)
+                new_name = doc.newbase
+                doc.newbase = old_name
+                path = os.path.join(doc.dirpath, new_name + os.path.extsep + doc.ext)
+                logger.debug("testing existence with constructed path %s", path)
 
+                if os.path.exists(path):
+                    logger.info("Skipping file %s as it already exists.", path)
+                    doc.close()                 # safely close document handle
+                    fragile.Break               # skip if the file already exists.
+                                                # this is to reduce the load going to google and the chance that google
+                                                # will block the ip address
+
+                handle_google(translator, doc)  # Handle google blocking by waiting for user to change vpn
+                extension_counter[doc.ext] = extension_counter.setdefault(doc.ext, 0) + 1
                 logger.info('Document will be saved to: %s', os.path.join(doc.dirpath, doc.newbase))
         except ValueError:
             logger.warning('Cannot support format. %s', os.path.split(os.path.basename(path))[1])
         except AssertionError:
             logger.warning('This file is empty: %s', path)
-    print("Data types passed: ", str(extension_counter))
+    print("Data types parsed: ", str(extension_counter))
     # Done?
 
 ############################################

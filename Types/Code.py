@@ -17,13 +17,17 @@ class Comments (TranslatableDocument):
         self.token = None
 
     def _openDoc(self):
-        logger.debug('path: "%s"', os.path.normpath(os.path.join(self.dirpath, self.base + os.path.extsep + self.ext)))
-        self.document = open(os.path.normpath(os.path.join(self.dirpath, self.base + os.path.extsep + self.ext)), 'r+')
-        assert(len(self.document.readlines()) != 0)
+        path = os.path.normpath(os.path.join(self.dirpath, self.base + os.path.extsep + self.ext))
+        assert (os.stat(path).st_size != 0)
+        logger.debug('_openDOC @path: "%s"', path)
+        self.document = open(path, 'r')
         # TODO: write a test for empty files
 
-    def save(self, name=None):
+    def close(self):
         self.document.close()
+
+    def save(self, name=None):
+        self.close()
         pathname = self._checkdir(name)
         with open(pathname, 'w') as f:
             i = 0

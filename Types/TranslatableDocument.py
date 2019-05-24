@@ -12,7 +12,9 @@ logger.setLevel(Interpres_Globals.VERBOSITY)
 class TranslatableDocument:
 
     def __init__(self, filepath):
-        logger.info(str(filepath))
+        logger.info("Created '%s' object", type(self).__name__)
+        logger.info("From: %s", str(filepath))
+        self.origin = filepath
         self.dirpath, basename = os.path.split(filepath)
         self.base, self.ext = basename.split('.')
         self.newbase = self.base + '_'
@@ -59,6 +61,10 @@ class TranslatableDocument:
             logger.warning('A document with the same name is still open. So the new document has been saved to {}.'.format(os.path.join(self.dirpath, self.newbase)))
         return False
 
+    @abc.abstractmethod
+    def close(self):
+        logger.info("safely closing document.")
+
     @staticmethod
     def translate(doc, tx , abbreviation=False, translate=False, extra=None):
         tx(doc)
@@ -77,7 +83,7 @@ class TranslatableDocument:
         :return:
         '''
         if name is None:
-                logging.debug('Using generated filename: {}.'.format(self.newbase))
+                logging.info('Using generated filename: %s.', self.newbase)
                 pathname = os.path.join(self.dirpath, '.'.join([self.newbase, self.ext]))
 
         else:

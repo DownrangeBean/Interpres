@@ -20,7 +20,11 @@ class WordDocx(TranslatableDocument):
         self.document = Document(os.path.join(self.dirpath, '.'.join((self.base, self.ext))))
         assert(len(self.document.paragraphs) != 0)
 
+    def close(self):
+        pass
+
     def save(self, name=None):
+        self.close()
         if len(self.destination_text) > 0:
             i = 0
             for para in self._new_doc.paragraphs:

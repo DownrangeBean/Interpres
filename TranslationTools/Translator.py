@@ -29,9 +29,10 @@ class Translator(object):
             raise AttributeError('No source language has been provided')
 
     def __call__(self, document: TranslatableDocument):
-        logger.info('Translating: %s, %s', type(document).__name__, document.dirpath)
+        logger.info("Translating: '%s' object", type(document).__name__)
         if not len(document.source_text) > 0:
             logger.info("Nothing to translate.")
+            self._translate_name(document)
             return
 
         test_type = document.source_text[0]
@@ -121,10 +122,10 @@ class Translator(object):
             for t in tokens:
                 document.newbase += googleTranslator().translate(t, src=self.source, dest=self.destination).text + '_'
         if obj.abbreviation:
-            logging.info('Adding destination language abbreviation: %s to end of file.', self.destination)
+            logger.info('Adding destination language abbreviation: %s to end of file.', self.destination)
             document.newbase += obj.destination # for adding abbreviation to filename
         if obj.extra:
-            logging.info('Adding callers provided text (%s) to end of filename.', obj.extra)
+            logger.info('Adding callers provided text (%s) to end of filename.', obj.extra)
             if obj.abbreviation:
                 obj.extra = '_' + obj.extra
             document.newbase += obj.extra

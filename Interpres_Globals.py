@@ -11,4 +11,5 @@ else:
 TEST_OUT_DIR = os.path.join(TEST_DIR, 'Tests_out')
 
 VERBOSITY = logging.ERROR
+LOG_FILE = os.path.join(ROOT_DIR, 'Util', 'Interpres.log')
 
